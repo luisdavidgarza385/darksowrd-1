@@ -1,0 +1,61 @@
+===================================
+  SPECTRAL X PRO - Como funciona
+===================================
+
+FLUJO:
+  Tu PC (juego + cheat + server)
+       ↓ escribe JSON
+  Celular del cliente (navegador)
+       ↓ toggles ON/OFF
+  Server recibe → escribe JSON → DLL lee → cheat activa
+
+
+PARA EMPEZAR (tu PC):
+  1. Doble click en "iniciar_panel.bat"
+  2. Abrir http://localhost:8080 en tu navegador
+  3. Login con licencia: SPECTRAL-X-2024-AAAA-BBBB-CCCC
+
+
+PARA DARLE ACCESO A UN CLIENTE:
+  Opcion A - Misma red (gratis, rapido):
+    1. El cliente pone http://TU_IP:8080 en su navegador
+    2. (Tu IP aparece al iniciar el server)
+
+  Opcion B - Desde cualquier lugar (gratis):
+    1. Descarga ngrok.com (gratis, sin tarjeta)
+    2. En otra ventana cmd: ngrok http 8080
+    3. Copia la URL que te da (tipo https://abc123.ngrok.io)
+    4. Esa URL se la das al cliente
+    5. El cliente la abra en su celular y listo
+
+  Opcion C - Dominio propio (~$3/mes):
+    1. Compra un dominio en Namecheap/Porkbun (~$8/año)
+    2. Compra un VPS barato en RackNerd (~$12/año)
+    3. Subi server.py al VPS
+    4. Apunta tu dominio al VPS
+    5. Los clientes van a tudominio.com
+
+
+CREAR LICENCIAS:
+  python generar_licencia.py gen cliente1 30 1
+  python generar_licencia.py gen admin 365 999
+  python generar_licencia.py list
+
+  - cliente1 = nombre del usuario
+  - 30 = dias de validez
+  - 1 = maximo de dispositivos
+
+
+ARCHIVOS:
+  iniciar_panel.bat      ← Ejecutar para iniciar
+  server.py              ← Servidor web
+  index.html             ← Panel de control
+  licenses.json          ← Licencias
+  generar_licencia.py    ← Crear licencias
+  cheat_state.json       ← Estado del cheat
+
+
+REQUISITOS:
+  - Python 3.x instalado (Add to PATH)
+  - El cheat DLL inyectado en el juego
+  - Para ngrok: descargar ngrok.com (gratis)

@@ -1,0 +1,1417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPECTRAL X PRO - Panel de Control</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: #0a0a0f;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1a0a2e 0%, #16213e 50%, #0f3460 100%);
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #00d2ff33;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            background: linear-gradient(90deg, #00d2ff, #7b2ff7, #ff00d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+        .header .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+        .header .dot {
+            width: 8px; height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        .tabs {
+            display: flex;
+            background: #111118;
+            border-bottom: 1px solid #222;
+            overflow-x: auto;
+            padding: 0 10px;
+        }
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+        .tab:hover { color: #aaa; }
+        .tab.active {
+            color: #00d2ff;
+            border-bottom-color: #00d2ff;
+        }
+
+        .content { padding: 20px; max-width: 1400px; margin: 0 auto; }
+
+        .section { display: none; }
+        .section.active { display: block; }
+
+        .section-title {
+            font-size: 1.1rem;
+            color: #00d2ff;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #00d2ff33;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: #15151f;
+            border: 1px solid #222;
+            border-radius: 10px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+        .card:hover { border-color: #00d2ff44; background: #1a1a25; }
+        .card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        .card-desc {
+            font-size: 0.75rem;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 26px;
+        }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: #333;
+            border-radius: 26px;
+            transition: 0.3s;
+        }
+        .slider:before {
+            content: "";
+            position: absolute;
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+        .toggle input:checked + .slider { background: linear-gradient(135deg, #00d2ff, #7b2ff7); }
+        .toggle input:checked + .slider:before { transform: translateX(22px); }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            margin-left: 8px;
+        }
+        .status-badge.on { background: #00ff8822; color: #00ff88; }
+        .status-badge.off { background: #ff444422; color: #ff4444; }
+
+        .slider-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .slider-control input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            outline: none;
+        }
+        .slider-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #00d2ff;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .slider-val {
+            font-size: 0.75rem;
+            color: #00d2ff;
+            min-width: 35px;
+            text-align: right;
+        }
+
+        .select-control {
+            margin-top: 8px;
+        }
+        .select-control select {
+            width: 100%;
+            padding: 6px 10px;
+            background: #222;
+            color: #fff;
+            border: 1px solid #333;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            outline: none;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-green { background: #00cc66; color: #fff; }
+        .btn-green:hover { background: #00aa55; box-shadow: 0 0 15px #00cc6644; }
+        .btn-red { background: #cc0033; color: #fff; }
+        .btn-red:hover { background: #aa0022; box-shadow: 0 0 15px #cc003344; }
+        .btn-blue { background: #0066cc; color: #fff; }
+        .btn-blue:hover { background: #0055aa; }
+        .btn-purple { background: #7b2ff7; color: #fff; }
+        .btn-purple:hover { background: #6620cc; }
+        .btn-orange { background: #ff6600; color: #fff; }
+        .btn-orange:hover { background: #dd5500; }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .quick-bar {
+            display: flex;
+            gap: 8px;
+            padding: 12px 0;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .log-panel {
+            background: #0d0d12;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 250px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+        }
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        .log-time { color: #7b2ff7; }
+        .log-action { color: #00d2ff; }
+        .log-target { color: #fff; }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #00d2ff, #7b2ff7);
+            color: #fff;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        .color-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 8px;
+        }
+        .color-row input[type="color"] {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: none;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        .login-overlay {
+            position: fixed; inset: 0;
+            background: #0a0a0f;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+        .login-overlay.hidden { display: none; }
+        .login-box {
+            background: #15151f;
+            border: 1px solid #333;
+            border-radius: 16px;
+            padding: 40px;
+            width: 380px;
+            text-align: center;
+        }
+        .login-box h2 {
+            font-size: 1.4rem;
+            background: linear-gradient(90deg, #00d2ff, #7b2ff7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .login-box p { color: #666; font-size: 0.8rem; margin-bottom: 24px; }
+        .login-box input {
+            width: 100%; padding: 12px 16px;
+            background: #0d0d12; border: 1px solid #333;
+            border-radius: 8px; color: #fff; font-size: 0.9rem;
+            font-family: 'Courier New', monospace;
+            text-align: center; letter-spacing: 1px;
+            outline: none; margin-bottom: 16px;
+        }
+        .login-box input:focus { border-color: #00d2ff; }
+        .login-box .btn { width: 100%; padding: 12px; font-size: 0.9rem; }
+        .login-error { color: #ff4444; font-size: 0.8rem; margin-top: 10px; min-height: 20px; }
+        .login-user { color: #00ff88; font-size: 0.75rem; margin-top: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="login-overlay" id="loginOverlay">
+    <div class="login-box">
+        <h2>SPECTRAL X PRO</h2>
+        <p>Conecta con tu servidor y ingresa con KeyAuth</p>
+        <input type="text" id="serverUrl" placeholder="URL del servidor (https://algo.trycloudflare.com)" maxlength="100"
+               onkeydown="if(event.key==='Enter')document.getElementById('loginUser').focus()">
+        <input type="text" id="loginUser" placeholder="Usuario KeyAuth" maxlength="30"
+               onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+        <input type="password" id="loginPass" placeholder="Contrasena" maxlength="30"
+               onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="btn btn-green" onclick="doLogin()">Ingresar</button>
+        <div class="login-error" id="loginError"></div>
+        <div class="login-user" id="loginInfo"></div>
+    </div>
+</div>
+
+<div class="header">
+    <h1>SPECTRAL X PRO</h1>
+    <div class="status">
+        <span style="color:#00ff88;font-size:0.75rem" id="headerUser"></span>
+        <div class="dot"></div>
+        <span>Panel Activo</span>
+        <button class="btn btn-blue" style="padding:4px 10px;font-size:0.7rem;margin-left:8px" onclick="shareUrl()">Copiar URL</button>
+        <button class="btn btn-red" style="padding:4px 10px;font-size:0.7rem;margin-left:4px" onclick="logout()">Salir</button>
+    </div>
+</div>
+
+<div class="tabs" id="tabs">
+    <div class="tab active" data-tab="aimbot">Aimbot</div>
+    <div class="tab" data-tab="memory">Memory</div>
+    <div class="tab" data-tab="exploits">Exploits</div>
+    <div class="tab" data-tab="windivert">WinDivert</div>
+    <div class="tab" data-tab="visuals">ESP / Visuals</div>
+    <div class="tab" data-tab="chams">Chams</div>
+    <div class="tab" data-tab="fps">FPS Unlock</div>
+    <div class="tab" data-tab="limpieza">Limpieza</div>
+    <div class="tab" data-tab="general">General</div>
+    <div class="tab" data-tab="log">Log</div>
+</div>
+
+<div class="content">
+
+    <!-- ==================== AIMBOT ==================== -->
+    <div class="section active" id="aimbot">
+        <div class="quick-bar">
+            <button class="btn btn-green" onclick="allToggle('aimbot',true)">Todo ON</button>
+            <button class="btn btn-red" onclick="allToggle('aimbot',false)">Todo OFF</button>
+        </div>
+
+        <div class="section-title">Silent Aim</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">Silent Aim <span class="status-badge off" id="badge-SilentAim">OFF</span></div>
+                <div class="card-desc">Aimbot silencioso - sin retroceso visual</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('SilentAim',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Silent Aim Match <span class="status-badge off" id="badge-SilentAimMatch">OFF</span></div>
+                <div class="card-desc">Modo match para silent aim</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('SilentAimMatch',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Silent Cover Mode <span class="status-badge off" id="badge-SilentCoverMode">OFF</span></div>
+                <div class="card-desc">Modo cobertura silent</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('SilentCoverMode',this.checked)"><span class="slider"></span></label>
+            </div>
+        </div>
+
+        <div class="section-title">Aimbot Memory</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">Memory Aimbot <span class="status-badge off" id="badge-EnabledMemory">OFF</span></div>
+                <div class="card-desc">Aimbot via memoria del juego</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('EnabledMemory',this.checked)"><span class="slider"></span></label>
+                <div class="select-control">
+                    <select onchange="setSelect('MemoryTarget',this.value)">
+                        <option value="0">Head</option>
+                        <option value="1">Neck</option>
+                        <option value="2">Legit</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Aim Method</div>
+                <div class="card-desc">Metodo de aimbot activo</div>
+                <div class="select-control">
+                    <select onchange="setSelect('MethodType',this.value)">
+                        <option value="0">Memory</option>
+                        <option value="1">Overkill</option>
+                        <option value="2">Assist</option>
+                        <option value="3">Neural</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">Rage / Ruby</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">AimBot Rage <span class="status-badge off" id="badge-AimBotRage">OFF</span></div>
+                <div class="card-desc">Aimbot rage agresivo</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('AimBotRage',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">AimBot Ruby <span class="status-badge off" id="badge-AimBotRuby">OFF</span></div>
+                <div class="card-desc">Aimbot ruby premium</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('AimBotRuby',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Rage Delay</div>
+                <div class="card-desc">Delay del rage aimbot</div>
+                <div class="slider-control">
+                    <input type="range" min="1" max="20" value="5" oninput="setSlider('RageDeley',this.value)">
+                    <span class="slider-val" id="val-RageDeley">5</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">Configuracion</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">Draw FOV Circle <span class="status-badge off" id="badge-DrawCircleFov">OFF</span></div>
+                <div class="card-desc">Mostrar circulo FOV</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('DrawCircleFov',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">FOV Radius</div>
+                <div class="card-desc">Radio del circulo FOV</div>
+                <div class="slider-control">
+                    <input type="range" min="100" max="3000" value="1000" oninput="setSlider('FovRadius',this.value)">
+                    <span class="slider-val" id="val-FovRadius">1000</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Ignore Team <span class="status-badge off" id="badge-ignoreteam">OFF</span></div>
+                <div class="card-desc">Ignorar companeros de equipo</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('ignoreteam',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Ignore Down <span class="status-badge on" id="badge-ignoreDown">ON</span></div>
+                <div class="card-desc">Ignorar enemigos derribados</div>
+                <label class="toggle"><input type="checkbox" checked onchange="toggle('ignoreDown',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Ignore Bots <span class="status-badge off" id="badge-ignoreBots">OFF</span></div>
+                <div class="card-desc">Ignorar bots</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('ignoreBots',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Target Distance</div>
+                <div class="card-desc">Distancia maxima de target</div>
+                <div class="slider-control">
+                    <input type="range" min="100" max="3000" value="1000" oninput="setSlider('TargentingDistance',this.value)">
+                    <span class="slider-val" id="val-TargentingDistance">1000</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MEMORY ==================== -->
+    <div class="section" id="memory">
+        <div class="quick-bar">
+            <button class="btn btn-green" onclick="allToggle('memory',true)">Todo ON</button>
+            <button class="btn btn-red" onclick="allToggle('memory',false)">Todo OFF</button>
+        </div>
+
+        <div class="section-title">Memory Hacks</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">No Recoil x86 <span class="status-badge off" id="badge-NoRecoilX86">OFF</span></div>
+                <div class="card-desc">Sin retroceso de armas</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('NoRecoilX86',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Aim Sniper <span class="status-badge off" id="badge-AimSniper">OFF</span></div>
+                <div class="card-desc">Aimbot para francotiradores</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('AimSniper',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Quick Sniper <span class="status-badge off" id="badge-QuickSniper">OFF</span></div>
+                <div class="card-desc">Sniper rapido</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('QuickSniper',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Mira x2 <span class="status-badge off" id="badge-miraxx2">OFF</span></div>
+                <div class="card-desc">Mira de 2x modificada</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('miraxx2',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Mira x4 <span class="status-badge off" id="badge-miraxx4">OFF</span></div>
+                <div class="card-desc">Mira de 4x modificada</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('miraxx4',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Speed Hack <span class="status-badge off" id="badge-SpeedHack">OFF</span></div>
+                <div class="card-desc">Velocidad extra de movimiento</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('SpeedHack',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Speed Timer <span class="status-badge off" id="badge-SpeedTimer">OFF</span></div>
+                <div class="card-desc">Speed con temporizador</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('SpeedTimer',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Levitate Me <span class="status-badge off" id="badge-LevitateMe">OFF</span></div>
+                <div class="card-desc">Volar / levitar en el aire</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('LevitateMe',this.checked)"><span class="slider"></span></label>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== EXPLOITS ==================== -->
+    <div class="section" id="exploits">
+        <div class="quick-bar">
+            <button class="btn btn-green" onclick="allToggle('exploits',true)">Todo ON</button>
+            <button class="btn btn-red" onclick="allToggle('exploits',false)">Todo OFF</button>
+        </div>
+
+        <div class="section-title">Exploits de Combate</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">Fast Fire <span class="status-badge off" id="badge-FastFire">OFF</span></div>
+                <div class="card-desc">Cadencia de tiro aumentada</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('FastFire',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Fast Reload <span class="status-badge off" id="badge-FastReload">OFF</span></div>
+                <div class="card-desc">Recarga instantanea</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('FastReload',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Infinity Ammo <span class="status-badge off" id="badge-InfinityAmmo">OFF</span></div>
+                <div class="card-desc">Municion infinita</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('InfinityAmmo',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">No Recoil Pro <span class="status-badge off" id="badge-NoRecoilPro">OFF</span></div>
+                <div class="card-desc">Sin recoil profesional</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('NoRecoilPro',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Double Gun <span class="status-badge off" id="badge-DoubleGun">OFF</span></div>
+                <div class="card-desc">Doble arma activa</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('DoubleGun',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">SpinBot <span class="status-badge off" id="badge-SpinBot">OFF</span></div>
+                <div class="card-desc">Giro automatico del personaje</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('SpinBot',this.checked)"><span class="slider"></span></label>
+                <div class="slider-control">
+                    <input type="range" min="1" max="20" value="5" oninput="setSlider('Rotation',this.value)">
+                    <span class="slider-val" id="val-Rotation">5</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Back Jump <span class="status-badge off" id="badge-BackJump">OFF</span></div>
+                <div class="card-desc">Salto hacia atras</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('BackJump',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Medikit Hack <span class="status-badge off" id="badge-MedikitHack">OFF</span></div>
+                <div class="card-desc">Curacion rapida</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('MedikitHack',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Fake Damage <span class="status-badge off" id="badge-FakeDamage">OFF</span></div>
+                <div class="card-desc">Dano falso al enemigo</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('FakeDamage',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Bug Camara <span class="status-badge off" id="badge-BugCamara">OFF</span></div>
+                <div class="card-desc">Bug de camara tercera persona</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('BugCamara',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Night Mode <span class="status-badge off" id="badge-NightMode">OFF</span></div>
+                <div class="card-desc">Modo noche / vision oscura</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('NightMode',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Vision Hack <span class="status-badge off" id="badge-VisionHack">OFF</span></div>
+                <div class="card-desc">Vision a traves de paredes</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('VisionHack',this.checked)"><span class="slider"></span></label>
+                <div class="slider-control">
+                    <input type="range" min="1" max="50" value="15" oninput="setSlider('FovVision',this.value)">
+                    <span class="slider-val" id="val-FovVision">15</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Nick Custom <span class="status-badge off" id="badge-NickCustom">OFF</span></div>
+                <div class="card-desc">Nombre personalizado</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('NickCustom',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Clip Lag <span class="status-badge off" id="badge-ClipLag">OFF</span></div>
+                <div class="card-desc">Lag de clip</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('ClipLag',this.checked)"><span class="slider"></span></label>
+            </div>
+        </div>
+
+        <div class="section-title">Teleport & Movimiento</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">Teleport X <span class="status-badge off" id="badge-TeleportX">OFF</span></div>
+                <div class="card-desc">Teletransporte a posicion X</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('TeleportX',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Teleport Mark <span class="status-badge off" id="badge-TeleportMark">OFF</span></div>
+                <div class="card-desc">Teletransporte a marca</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('TeleportMark',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Pull Enemy <span class="status-badge off" id="badge-PullEnemy">OFF</span></div>
+                <div class="card-desc">Jalar enemigo hacia vos</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('PullEnemy',this.checked)"><span class="slider"></span></label>
+                <div class="slider-control">
+                    <input type="range" min="1" max="20" value="10" oninput="setSlider('PullEnemySpeed',this.value)">
+                    <span class="slider-val" id="val-PullEnemySpeed">10</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Magnet Enemy <span class="status-badge off" id="badge-MagnetEnemy">OFF</span></div>
+                <div class="card-desc">Iman de enemigos cercanos</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('MagnetEnemy',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Under Player <span class="status-badge off" id="badge-UnderPlayer">OFF</span></div>
+                <div class="card-desc">Ir debajo del jugador</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('UnderPlayer',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Raise Enemy <span class="status-badge off" id="badge-RaiseEnemy">OFF</span></div>
+                <div class="card-desc">Elevar enemigo en el aire</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('RaiseEnemy',this.checked)"><span class="slider"></span></label>
+            </div>
+        </div>
+
+        <div class="section-title">WallHack & NoClip</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">WallHack N32 <span class="status-badge off" id="badge-WallHackN32">OFF</span></div>
+                <div class="card-desc">Paredes transparentes N32</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('WallHackN32',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">WallHack P64 <span class="status-badge off" id="badge-WallHackP64">OFF</span></div>
+                <div class="card-desc">Paredes transparentes P64</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('WallHackP64',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">WallHack V7A <span class="status-badge off" id="badge-WallHackV7A">OFF</span></div>
+                <div class="card-desc">Paredes transparentes V7A</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('WallHackV7A',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">NoClip <span class="status-badge off" id="badge-Noclip">OFF</span></div>
+                <div class="card-desc">Pasar a traves de estructuras</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('Noclip',this.checked)"><span class="slider"></span></label>
+                <div class="slider-control">
+                    <input type="range" min="1" max="10" value="3" oninput="setSlider('NoclipSpeed',this.value)">
+                    <span class="slider-val" id="val-NoclipSpeed">3</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Fly Static <span class="status-badge off" id="badge-FlyStatic">OFF</span></div>
+                <div class="card-desc">Vuelo estatico en el aire</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('FlyStatic',this.checked)"><span class="slider"></span></label>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== WINDIVERT ==================== -->
+    <div class="section" id="windivert">
+        <div class="quick-bar">
+            <button class="btn btn-green" onclick="allToggle('windivert',true)">Todo ON</button>
+            <button class="btn btn-red" onclick="allToggle('windivert',false)">Todo OFF</button>
+        </div>
+
+        <div class="section-title">WinDivert Network Exploits</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">TeleKill <span class="status-badge off" id="badge-TeleKillMode">OFF</span></div>
+                <div class="card-desc">Matar a distancia via red</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('TeleKillMode',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Ghost Mode <span class="status-badge off" id="badge-GhostMode">OFF</span></div>
+                <div class="card-desc">Modo fantasma - invisible en red</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('GhostMode',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Teleport Lag <span class="status-badge off" id="badge-TeleportLag">OFF</span></div>
+                <div class="card-desc">Teletransporte via lag de red</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('TeleportLag',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Freeze Lag <span class="status-badge off" id="badge-FreezeLag">OFF</span></div>
+                <div class="card-desc">Congelar enemigos via lag</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('FreezeLag',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Freeze Auto <span class="status-badge off" id="badge-FreezeAuto">OFF</span></div>
+                <div class="card-desc">Freeze automatico</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('FreezeAuto',this.checked)"><span class="slider"></span></label>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== VISUALS / ESP ==================== -->
+    <div class="section" id="visuals">
+        <div class="quick-bar">
+            <button class="btn btn-green" onclick="allToggle('visuals',true)">Todo ON</button>
+            <button class="btn btn-red" onclick="allToggle('visuals',false)">Todo OFF</button>
+        </div>
+
+        <div class="section-title">ESP Lineas & Cajas</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">ESP Line <span class="status-badge off" id="badge-EspLine">OFF</span></div>
+                <div class="card-desc">Lineas hacia jugadores</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('EspLine',this.checked)"><span class="slider"></span></label>
+                <div class="select-control">
+                    <select onchange="setSelect('SelectedLine',this.value)">
+                        <option value="0">Top</option>
+                        <option value="1">Center</option>
+                        <option value="2">Bottom</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">ESP Box <span class="status-badge off" id="badge-EspBox">OFF</span></div>
+                <div class="card-desc">Cajas alrededor de jugadores</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('EspBox',this.checked)"><span class="slider"></span></label>
+                <div class="select-control">
+                    <select onchange="setSelect('SelectedBox',this.value)">
+                        <option value="0">Square</option>
+                        <option value="1" selected>Corner</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">ESP Fill <span class="status-badge off" id="badge-EspFill">OFF</span></div>
+                <div class="card-desc">Relleno de cajas</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('EspFill',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">ESP Skeleton <span class="status-badge off" id="badge-EspSekelton">OFF</span></div>
+                <div class="card-desc">Esqueleto de jugadores</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('EspSekelton',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Skeleton Health <span class="status-badge off" id="badge-SkeletonHealth">OFF</span></div>
+                <div class="card-desc">Esqueleto con barra de vida</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('SkeletonHealth',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">ESP Weapon <span class="status-badge off" id="badge-EspWeapon">OFF</span></div>
+                <div class="card-desc">Mostrar arma equipada</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('EspWeapon',this.checked)"><span class="slider"></span></label>
+            </div>
+        </div>
+
+        <div class="section-title">ESP Info</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">ESP Health <span class="status-badge off" id="badge-EspHealth">OFF</span></div>
+                <div class="card-desc">Barra de vida</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('EspHealth',this.checked)"><span class="slider"></span></label>
+                <div class="select-control">
+                    <select onchange="setSelect('SelectedHealth',this.value)">
+                        <option value="0">Left</option>
+                        <option value="1">Right</option>
+                        <option value="2">Top</option>
+                        <option value="3">Bottom</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">ESP Name <span class="status-badge off" id="badge-EspName">OFF</span></div>
+                <div class="card-desc">Nombre del jugador</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('EspName',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">ESP Distance <span class="status-badge off" id="badge-EspDistance">OFF</span></div>
+                <div class="card-desc">Distancia al jugador</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('EspDistance',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">ESP Kills <span class="status-badge off" id="badge-EspKills">OFF</span></div>
+                <div class="card-desc">Contador de kills</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('EspKills',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">ESP Rank <span class="status-badge off" id="badge-EspRank">OFF</span></div>
+                <div class="card-desc">Rango del jugador</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('EspRank',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">ESP Rachas <span class="status-badge off" id="badge-EspRacha">OFF</span></div>
+                <div class="card-desc">Rachas de eliminations</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('EspRacha',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Panel Info <span class="status-badge off" id="badge-EspPanelInfo">OFF</span></div>
+                <div class="card-desc">Panel informativo</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('EspPanelInfo',this.checked)"><span class="slider"></span></label>
+                <div class="select-control">
+                    <select onchange="setSelect('SelectedInfo',this.value)">
+                        <option value="0">Normal</option>
+                        <option value="1">Advanced</option>
+                        <option value="2">Rank</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Show Invis <span class="status-badge off" id="badge-ShowInvis">OFF</span></div>
+                <div class="card-desc">Mostrar invisibles</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('ShowInvis',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Show Team <span class="status-badge off" id="badge-ShowTeam">OFF</span></div>
+                <div class="card-desc">Mostrar equipo aliado</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('ShowTeam',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Ignore Bots ESP <span class="status-badge off" id="badge-IgnoreBots">OFF</span></div>
+                <div class="card-desc">Ignorar bots en ESP</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('IgnoreBots',this.checked)"><span class="slider"></span></label>
+            </div>
+        </div>
+
+        <div class="section-title">Glow & RGB</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">RGB Mode <span class="status-badge off" id="badge-RGBMode">OFF</span></div>
+                <div class="card-desc">Colores RGB animados</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('RGBMode',this.checked)"><span class="slider"></span></label>
+                <div class="slider-control">
+                    <input type="range" min="1" max="10" value="3" oninput="setSlider('RGBSpeed',this.value)">
+                    <span class="slider-val" id="val-RGBSpeed">3</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Glow Intensity</div>
+                <div class="card-desc">Intensidad del brillo</div>
+                <div class="slider-control">
+                    <input type="range" min="10" max="200" value="60" oninput="setSlider('GlowIntensity',this.value)">
+                    <span class="slider-val" id="val-GlowIntensity">60</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Distance Max</div>
+                <div class="card-desc">Distancia maxima ESP</div>
+                <div class="slider-control">
+                    <input type="range" min="500" max="5000" value="2000" oninput="setSlider('DistanceMax',this.value)">
+                    <span class="slider-val" id="val-DistanceMax">2000</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">ESP Size</div>
+                <div class="card-desc">Tamano del texto ESP</div>
+                <div class="slider-control">
+                    <input type="range" min="5" max="30" value="12" oninput="setSlider('Size',this.value)">
+                    <span class="slider-val" id="val-Size">12</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== CHAMS ==================== -->
+    <div class="section" id="chams">
+        <div class="quick-bar">
+            <button class="btn btn-red" onclick="allChamsOff()">Todos OFF</button>
+        </div>
+
+        <div class="section-title">Chams 3D & Efectos</div>
+        <div class="grid">
+            <div class="card"><div class="card-title">Chams 3D <span class="status-badge off" id="badge-Chams3D">OFF</span></div><div class="card-desc">Chams tridimensional basico</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Chams3D',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Oreon <span class="status-badge off" id="badge-Oreon">OFF</span></div><div class="card-desc">Estilo Oreon</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Oreon',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Solido <span class="status-badge off" id="badge-Solido">OFF</span></div><div class="card-desc">Solido opaco</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Solido',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Glow <span class="status-badge off" id="badge-Glow">OFF</span></div><div class="card-desc">Brillo neon</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Glow',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Wireframe <span class="status-badge off" id="badge-Wireframe">OFF</span></div><div class="card-desc">Alambrico</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Wireframe',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Black <span class="status-badge off" id="badge-Black">OFF</span></div><div class="card-desc">Negro solido</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Black',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Pick <span class="status-badge off" id="badge-Pick">OFF</span></div><div class="card-desc">Estilo pick</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Pick',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Blanco <span class="status-badge off" id="badge-Blanco">OFF</span></div><div class="card-desc">Blanco solido</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Blanco',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Cilindro <span class="status-badge off" id="badge-Cilindro">OFF</span></div><div class="card-desc">Forma de cilindro</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Cilindro',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Moco <span class="status-badge off" id="badge-Moco">OFF</span></div><div class="card-desc">Estilo moco verde</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Moco',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Flecha <span class="status-badge off" id="badge-Flecha">OFF</span></div><div class="card-desc">Flecha direccional</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Flecha',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Glitch <span class="status-badge off" id="badge-Glitch">OFF</span></div><div class="card-desc">Efecto glitch</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Glitch',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Glow Animado <span class="status-badge off" id="badge-GlowAnimado">OFF</span></div><div class="card-desc">Brillo con animacion</div><label class="toggle"><input type="checkbox" onchange="toggleChams('GlowAnimado',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Box 2D <span class="status-badge off" id="badge-Box2d">OFF</span></div><div class="card-desc">Caja 2D</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Box2d',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Box 3D <span class="status-badge off" id="badge-Box3d">OFF</span></div><div class="card-desc">Caja 3D</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Box3d',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">RGB Chams <span class="status-badge off" id="badge-Rgb">OFF</span></div><div class="card-desc">Colores RGB cambiantes</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Rgb',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Creeper <span class="status-badge off" id="badge-Creeper">OFF</span></div><div class="card-desc">Estilo Creeper</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Creeper',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Disco <span class="status-badge off" id="badge-Disco">OFF</span></div><div class="card-desc">Modo discoteca</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Disco',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Lava <span class="status-badge off" id="badge-Lava">OFF</span></div><div class="card-desc">Efecto lava</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Lava',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Peru <span class="status-badge off" id="badge-Peru">OFF</span></div><div class="card-desc">Tema Peru</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Peru',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Brazil <span class="status-badge off" id="badge-Brazil">OFF</span></div><div class="card-desc">Tema Brasil</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Brazil',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Mexico <span class="status-badge off" id="badge-Mexico">OFF</span></div><div class="card-desc">Tema Mexico</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Mexico',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Spiderman <span class="status-badge off" id="badge-Spiderman">OFF</span></div><div class="card-desc">Tema Spiderman</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Spiderman',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Chams PN <span class="status-badge off" id="badge-ChamsPn">OFF</span></div><div class="card-desc">Chams PN especial</div><label class="toggle"><input type="checkbox" onchange="toggleChams('ChamsPn',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Corazon <span class="status-badge off" id="badge-Corazon">OFF</span></div><div class="card-desc">Forma de corazon</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Corazon',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Navidad <span class="status-badge off" id="badge-Navidad">OFF</span></div><div class="card-desc">Tema navideño</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Navidad',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Legendario <span class="status-badge off" id="badge-ChamsLegendario">OFF</span></div><div class="card-desc">Chams legendario</div><label class="toggle"><input type="checkbox" onchange="toggleChams('ChamsLegendario',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Wukong <span class="status-badge off" id="badge-ChamsWokung">OFF</span></div><div class="card-desc">Tema Wukong</div><label class="toggle"><input type="checkbox" onchange="toggleChams('ChamsWokung',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Wukong Ex <span class="status-badge off" id="badge-WokungEx">OFF</span></div><div class="card-desc">Wukong extendido</div><label class="toggle"><input type="checkbox" onchange="toggleChams('WokungEx',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Galaxy <span class="status-badge off" id="badge-galaxy">OFF</span></div><div class="card-desc">Efecto galaxia</div><label class="toggle"><input type="checkbox" onchange="toggleChams('galaxy',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Golden Galaxy <span class="status-badge off" id="badge-goldengalaxy">OFF</span></div><div class="card-desc">Galaxia dorada</div><label class="toggle"><input type="checkbox" onchange="toggleChams('goldengalaxy',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Starfield <span class="status-badge off" id="badge-starfield">OFF</span></div><div class="card-desc">Campo estelar</div><label class="toggle"><input type="checkbox" onchange="toggleChams('starfield',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Rainbow Swirl <span class="status-badge off" id="badge-rainbowswirl">OFF</span></div><div class="card-desc">Arcoiris giratorio</div><label class="toggle"><input type="checkbox" onchange="toggleChams('rainbowswirl',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Celeste <span class="status-badge off" id="badge-Celeste">OFF</span></div><div class="card-desc">Color celeste</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Celeste',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Matrix <span class="status-badge off" id="badge-matrix">OFF</span></div><div class="card-desc">Efecto Matrix</div><label class="toggle"><input type="checkbox" onchange="toggleChams('matrix',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Frame <span class="status-badge off" id="badge-Frame">OFF</span></div><div class="card-desc">Marcos decorativos</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Frame',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Transparente <span class="status-badge off" id="badge-ChamsTransparente">OFF</span></div><div class="card-desc">Chams transparente</div><label class="toggle"><input type="checkbox" onchange="toggleChams('ChamsTransparente',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Negro Chams <span class="status-badge off" id="badge-Negro">OFF</span></div><div class="card-desc">Chams negro puro</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Negro',this.checked)"><span class="slider"></span></label></div>
+        </div>
+
+        <div class="section-title">Mapas & Extras</div>
+        <div class="grid">
+            <div class="card"><div class="card-title">HD Remap <span class="status-badge off" id="badge-HdRmap">OFF</span></div><div class="card-desc">Mapa en HD</div><label class="toggle"><input type="checkbox" onchange="toggleChams('HdRmap',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Mapa Oscuro <span class="status-badge off" id="badge-MapaOcuro">OFF</span></div><div class="card-desc">Mapa oscuro</div><label class="toggle"><input type="checkbox" onchange="toggleChams('MapaOcuro',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Mapa Bendi <span class="status-badge off" id="badge-MapaBendi">OFF</span></div><div class="card-desc">Mapa bendi</div><label class="toggle"><input type="checkbox" onchange="toggleChams('MapaBendi',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Camiseta <span class="status-badge off" id="badge-Camiseta">OFF</span></div><div class="card-desc">Textura de camiseta</div><label class="toggle"><input type="checkbox" onchange="toggleChams('Camiseta',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">White Glitch <span class="status-badge off" id="badge-whiteglich">OFF</span></div><div class="card-desc">Glitch blanco</div><label class="toggle"><input type="checkbox" onchange="toggleChams('whiteglich',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">Latam Glitch <span class="status-badge off" id="badge-lataglich">OFF</span></div><div class="card-desc">Glitch latam</div><label class="toggle"><input type="checkbox" onchange="toggleChams('lataglich',this.checked)"><span class="slider"></span></label></div>
+            <div class="card"><div class="card-title">TX Glitch <span class="status-badge off" id="badge-txglich">OFF</span></div><div class="card-desc">Glitch TX</div><label class="toggle"><input type="checkbox" onchange="toggleChams('txglich',this.checked)"><span class="slider"></span></label></div>
+        </div>
+    </div>
+
+    <!-- ==================== FPS ==================== -->
+    <div class="section" id="fps">
+        <div class="section-title">FPS Unlocker</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">FPS Unlock <span class="status-badge off" id="badge-activate_fps">OFF</span></div>
+                <div class="card-desc">Activar desbloqueo de FPS</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('activate_fps',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Nivel de FPS</div>
+                <div class="card-desc">Seleccionar target de FPS</div>
+                <div class="btn-group">
+                    <button class="btn btn-blue" onclick="setFps(30)">30</button>
+                    <button class="btn btn-blue" onclick="setFps(60)">60</button>
+                    <button class="btn btn-green" onclick="setFps(100)">100</button>
+                    <button class="btn btn-orange" onclick="setFps(150)">150</button>
+                    <button class="btn btn-purple" onclick="setFps(240)">240</button>
+                </div>
+                <div class="slider-control" style="margin-top:10px">
+                    <input type="range" min="30" max="240" step="10" value="60" oninput="setSlider('slider_fps',this.value)">
+                    <span class="slider-val" id="val-slider_fps">60</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== LIMPIEZA ==================== -->
+    <div class="section" id="limpieza">
+        <div class="quick-bar">
+            <button class="btn btn-purple" onclick="runMaint()">Mantenimiento Completo</button>
+        </div>
+
+        <div class="section-title">Limpieza del Sistema</div>
+        <div class="grid">
+            <div class="card"><div class="card-title">Liberar Memoria</div><div class="card-desc">Liberar RAM de procesos</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('liberarMemoriaProcesos')">Ejecutar</button></div></div>
+            <div class="card"><div class="card-title">Limpiar Temporales</div><div class="card-desc">Eliminar archivos temporales</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('limpiarTemporales')">Ejecutar</button></div></div>
+            <div class="card"><div class="card-title">Limpiar Portapapeles</div><div class="card-desc">Vaciar clipboard</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('limpiarPortapapeles')">Ejecutar</button></div></div>
+            <div class="card"><div class="card-title">Historial Ejecucion</div><div class="card-desc">Limpiar historial de cmd</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('limpiarHistorialEjecucion')">Ejecutar</button></div></div>
+            <div class="card"><div class="card-title">Docs Recientes</div><div class="card-desc">Eliminar documentos recientes</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('limpiarDocumentosRecientes')">Ejecutar</button></div></div>
+            <div class="card"><div class="card-title">Cache Miniaturas</div><div class="card-desc">Limpiar cache de miniaturas</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('limpiarCacheMiniaturas')">Ejecutar</button></div></div>
+            <div class="card"><div class="card-title">Papelera</div><div class="card-desc">Vaciar papelera de reciclaje</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('limpiarPapelera')">Ejecutar</button></div></div>
+            <div class="card"><div class="card-title">Navegadores</div><div class="card-desc">Cerrar y limpiar historial web</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('limpiarNavegadores')">Ejecutar</button></div></div>
+        </div>
+
+        <div class="section-title">Optimizacion</div>
+        <div class="grid">
+            <div class="card"><div class="card-title">Optimizar RAM</div><div class="card-desc">Liberar toda la RAM posible</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('OptimizarRAM')">Ejecutar</button></div></div>
+            <div class="card"><div class="card-title">Archivos Sistema</div><div class="card-desc">Eliminar basura del sistema</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('LimpiarArchivosSistema')">Ejecutar</button></div></div>
+            <div class="card"><div class="card-title">Detener Servicios</div><div class="card-desc">Parar servicios innecesarios</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('DetenerServicios')">Ejecutar</button></div></div>
+            <div class="card"><div class="card-title">Mejorar Apagado</div><div class="card-desc">Acelerar apagado de Windows</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('MejorarApagado')">Ejecutar</button></div></div>
+            <div class="card"><div class="card-title">Prioridad Alta</div><div class="card-desc">Elevar prioridad del proceso</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('PrioridadAlta')">Ejecutar</button></div></div>
+            <div class="card"><div class="card-title">Limpiar Inicio</div><div class="card-desc">Limpiar programas de inicio</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('LimpiarInicio')">Ejecutar</button></div></div>
+            <div class="card"><div class="card-title">Desactivar Telemetria</div><div class="card-desc">Parar espionaje de Windows</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('DesactivarTelemetria')">Ejecutar</button></div></div>
+            <div class="card"><div class="card-title">Maximo Rendimiento</div><div class="card-desc">Plan de energia alto rendimiento</div><div class="btn-group"><button class="btn btn-green" onclick="runFunc('ActivarMaximoRendimiento')">Ejecutar</button></div></div>
+        </div>
+    </div>
+
+    <!-- ==================== GENERAL ==================== -->
+    <div class="section" id="general">
+        <div class="section-title">Configuracion General</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">Discord RPC <span class="status-badge on" id="badge-DiscordRPC">ON</span></div>
+                <div class="card-desc">Mostrar actividad en Discord</div>
+                <label class="toggle"><input type="checkbox" checked onchange="toggle('DiscordRPC',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Mode Streamer <span class="status-badge off" id="badge-ModeStreamer">OFF</span></div>
+                <div class="card-desc">Modo streamer (ocultar nombres)</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('ModeStreamer',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Show Particles <span class="status-badge on" id="badge-ShowParticles">ON</span></div>
+                <div class="card-desc">Mostrar particulas del menu</div>
+                <label class="toggle"><input type="checkbox" checked onchange="toggle('ShowParticles',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Notification Sounds <span class="status-badge on" id="badge-NotificationSounds">ON</span></div>
+                <div class="card-desc">Sonidos de notificacion</div>
+                <label class="toggle"><input type="checkbox" checked onchange="toggle('NotificationSounds',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Show Keybinds <span class="status-badge off" id="badge-ShowKeybinds">OFF</span></div>
+                <div class="card-desc">Mostrar teclas asignadas</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('ShowKeybinds',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">High Performance <span class="status-badge off" id="badge-HightPerformance">OFF</span></div>
+                <div class="card-desc">Modo alto rendimiento</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('HightPerformance',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Remove Sounds <span class="status-badge off" id="badge-RemoveSounds">OFF</span></div>
+                <div class="card-desc">Eliminar sonidos del juego</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('RemoveSounds',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Bypass <span class="status-badge off" id="badge-Bypass">OFF</span></div>
+                <div class="card-desc">Bypass anti-cheat</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('Bypass',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">AuthRD Notifications <span class="status-badge on" id="badge-EnableAuthRDNotifications">ON</span></div>
+                <div class="card-desc">Notificaciones del servidor</div>
+                <label class="toggle"><input type="checkbox" checked onchange="toggle('EnableAuthRDNotifications',this.checked)"><span class="slider"></span></label>
+            </div>
+        </div>
+
+        <div class="section-title">Free Fire Version</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">Emulador</div>
+                <div class="card-desc">Seleccionar emulador</div>
+                <div class="select-control">
+                    <select onchange="setSelect('SelectEmulator',this.value)">
+                        <option value="0">MEmu Play</option>
+                        <option value="1">Bluestacks</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Version FF</div>
+                <div class="card-desc">Version del juego</div>
+                <div class="select-control">
+                    <select onchange="setSelect('SelectFreeFire',this.value)">
+                        <option value="0">FF N32</option>
+                        <option value="1">FF MAX</option>
+                        <option value="2">FF X86</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Free Fire V7 <span class="status-badge off" id="badge-FreeFireV7">OFF</span></div>
+                <div class="card-desc">Version 7 activa</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('FreeFireV7',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Free Fire Max <span class="status-badge off" id="badge-FreeFireMax">OFF</span></div>
+                <div class="card-desc">Version MAX activa</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('FreeFireMax',this.checked)"><span class="slider"></span></label>
+            </div>
+            <div class="card">
+                <div class="card-title">Free Fire X86 <span class="status-badge off" id="badge-FreeFireX86">OFF</span></div>
+                <div class="card-desc">Version X86 activa</div>
+                <label class="toggle"><input type="checkbox" onchange="toggle('FreeFireX86',this.checked)"><span class="slider"></span></label>
+            </div>
+        </div>
+
+        <div class="section-title">Colores ESP</div>
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">Line Color</div>
+                <div class="color-row"><input type="color" value="#ffffff" onchange="setColor('linesColor',this.value)"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Box Color</div>
+                <div class="color-row"><input type="color" value="#ffffff" onchange="setColor('boxColor',this.value)"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Bones Color</div>
+                <div class="color-row"><input type="color" value="#ffffff" onchange="setColor('bonesColor',this.value)"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Weapon Color</div>
+                <div class="color-row"><input type="color" value="#ffffff" onchange="setColor('weaponColor',this.value)"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Name Color</div>
+                <div class="color-row"><input type="color" value="#ffffff" onchange="setColor('nameColor',this.value)"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Distance Color</div>
+                <div class="color-row"><input type="color" value="#ffffff" onchange="setColor('distanceColor',this.value)"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">Kills Color</div>
+                <div class="color-row"><input type="color" value="#ff8800" onchange="setColor('killsColor',this.value)"></div>
+            </div>
+            <div class="card">
+                <div class="card-title">FOV Circle Color</div>
+                <div class="color-row"><input type="color" value="#ffffff" onchange="setColor('FovCircleColor',this.value)"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== LOG ==================== -->
+    <div class="section" id="log">
+        <div class="section-title">Registro de Actividad</div>
+        <div class="log-panel" id="logPanel">
+            <div class="log-entry"><span class="log-time">[Sistema]</span> <span class="log-action">Panel SPECTRAL X PRO iniciado</span></div>
+        </div>
+        <div style="margin-top:10px">
+            <button class="btn btn-red" onclick="clearLog()">Limpiar Log</button>
+        </div>
+    </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+    <script>
+    let API = localStorage.getItem('spectral_server') || '';
+    const state = {};
+    let authToken = localStorage.getItem('spectral_token') || '';
+    let currentUser = localStorage.getItem('spectral_user') || '';
+
+    function checkAuth() {
+        if (authToken && currentUser && API) {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('headerUser').textContent = currentUser;
+        }
+        const savedServer = localStorage.getItem('spectral_server');
+        if (savedServer) {
+            document.getElementById('serverUrl').value = savedServer;
+        }
+    }
+    checkAuth();
+
+    async function doLogin() {
+        const server = document.getElementById('serverUrl').value.trim().replace(/\/+$/, '');
+        const user = document.getElementById('loginUser').value.trim();
+        const pass = document.getElementById('loginPass').value.trim();
+        const errEl = document.getElementById('loginError');
+        if (!server) { errEl.textContent = 'Ingresa la URL del servidor'; return; }
+        if (!user || !pass) { errEl.textContent = 'Ingresa usuario y contrasena'; return; }
+        API = server;
+        errEl.textContent = 'Verificando con KeyAuth...';
+        try {
+            const res = await fetch(API + '/api/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: user, password: pass })
+            });
+            const data = await res.json();
+            if (data.ok) {
+                authToken = data.token;
+                currentUser = data.user.username;
+                localStorage.setItem('spectral_token', authToken);
+                localStorage.setItem('spectral_user', currentUser);
+                localStorage.setItem('spectral_server', API);
+                document.getElementById('loginOverlay').classList.add('hidden');
+                errEl.textContent = '';
+                const info = data.user;
+                let expDate = info.expiry ? new Date(info.expiry * 1000).toLocaleDateString('es-ES') : 'N/A';
+                let timeLeft = info.timeleft ? Math.floor(info.timeleft / 86400) + ' dias' : 'N/A';
+                document.getElementById('headerUser').textContent =
+                    currentUser + ' | ' + info.subscription + ' | Exp: ' + expDate;
+                showToast('Bienvenido ' + currentUser);
+                addLog('Login', currentUser + ' conectado (' + info.subscription + ')');
+            } else {
+                errEl.textContent = data.error || 'Credenciales incorrectas';
+            }
+        } catch (e) {
+            errEl.textContent = 'Sin conexion - verifica tu internet';
+        }
+    }
+
+    function logout() {
+        authToken = '';
+        currentUser = '';
+        API = '';
+        localStorage.removeItem('spectral_token');
+        localStorage.removeItem('spectral_user');
+        localStorage.removeItem('spectral_server');
+        document.getElementById('loginOverlay').classList.remove('hidden');
+        addLog('Logout', 'Sesion cerrada');
+    }
+
+    function shareUrl() {
+        const url = window.location.href;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('URL copiada - compartila con tu cliente');
+                addLog('URL', url);
+            });
+        } else {
+            prompt('Copia esta URL y compartila:', url);
+        }
+    }
+
+    async function apiPost(endpoint, data) {
+        try {
+            const res = await fetch(API + endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + authToken
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (res.status === 401) { logout(); return { ok: false }; }
+            return result;
+        } catch (e) {
+            console.warn('Backend no disponible:', e.message);
+            return { ok: false, offline: true };
+        }
+    }
+
+    async function checkConnection() {
+        try {
+            const res = await fetch(API + '/api/status');
+            const data = await res.json();
+            const dot = document.querySelector('.dot');
+            if (data.connected) {
+                dot.style.background = '#00ff88';
+                dot.title = 'Memoria conectada al juego';
+            } else {
+                dot.style.background = '#ffaa00';
+                dot.title = 'Sin conexion a memoria - Solo interfaz';
+            }
+        } catch (e) {
+            document.querySelector('.dot').style.background = '#ff4444';
+        }
+    }
+    setInterval(checkConnection, 5000);
+    checkConnection();
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function addLog(action, target) {
+        const lp = document.getElementById('logPanel');
+        const time = new Date().toLocaleTimeString('es-ES');
+        const e = document.createElement('div');
+        e.className = 'log-entry';
+        e.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-action">${action}</span> <span class="log-target">${target}</span>`;
+        lp.insertBefore(e, lp.firstChild);
+        if (lp.children.length > 100) lp.removeChild(lp.lastChild);
+    }
+
+    function toggle(name, val) {
+        state[name] = val;
+        const badge = document.getElementById('badge-' + name);
+        if (badge) {
+            badge.textContent = val ? 'ON' : 'OFF';
+            badge.className = 'status-badge ' + (val ? 'on' : 'off');
+        }
+        apiPost('/api/toggle', { feature: name, value: val });
+        addLog(val ? 'Activado' : 'Desactivado', name);
+        showToast(`${name} ${val ? 'ON' : 'OFF'}`);
+    }
+
+    function toggleChams(name, val) {
+        state[name] = val;
+        const badge = document.getElementById('badge-' + name);
+        if (badge) {
+            badge.textContent = val ? 'ON' : 'OFF';
+            badge.className = 'status-badge ' + (val ? 'on' : 'off');
+        }
+        apiPost('/api/toggle', { feature: name, value: val });
+        addLog(val ? 'Chams ON' : 'Chams OFF', name);
+        showToast(`Chams: ${name} ${val ? 'ON' : 'OFF'}`);
+    }
+
+    function setSlider(name, val) {
+        state[name] = parseFloat(val);
+        const v = document.getElementById('val-' + name);
+        if (v) v.textContent = val;
+        apiPost('/api/slider', { feature: name, value: val });
+        addLog('Ajustado', `${name} = ${val}`);
+    }
+
+    function setSelect(name, val) {
+        state[name] = parseInt(val);
+        apiPost('/api/select', { feature: name, value: val });
+        addLog('Select', `${name} = ${val}`);
+    }
+
+    function setColor(name, val) {
+        state[name] = val;
+        apiPost('/api/color', { feature: name, value: val });
+        addLog('Color', `${name} = ${val}`);
+    }
+
+    function setFps(val) {
+        state.slider_fps = val;
+        const v = document.getElementById('val-slider_fps');
+        if (v) v.textContent = val;
+        apiPost('/api/slider', { feature: 'slider_fps', value: val });
+        addLog('FPS', `Configurado a ${val} FPS`);
+        showToast(`FPS: ${val}`);
+    }
+
+    function runFunc(name) {
+        const cmdMap = {
+            'liberarMemoriaProcesos': 'echo Liberando memoria...',
+            'limpiarTemporales': 'del /s /f /q %temp%\\*',
+            'limpiarPortapapeles': 'echo Portapapeles limpiado',
+            'limpiarHistorialEjecucion': 'echo Historial limpiado',
+            'limpiarDocumentosRecientes': 'del /q "%APPDATA%\\Microsoft\\Windows\\Recent\\*"',
+            'limpiarCacheMiniaturas': 'del /q "%LOCALAPPDATA%\\Microsoft\\Windows\\Explorer\\thumbcache_*"',
+            'limpiarPapelera': 'rd /s /q C:\\$Recycle.Bin',
+            'limpiarNavegadores': 'taskkill /f /im chrome.exe & taskkill /f /im msedge.exe',
+            'OptimizarRAM': 'powershell -command "[System.GC]::Collect()"',
+            'LimpiarArchivosSistema': 'del /s /f /q C:\\Windows\\Temp\\*',
+            'DetenerServicios': 'sc stop DiagTrack',
+            'MejorarApagado': 'reg add "HKCU\\Control Panel\\Desktop" /v WaitToKillAppTimeout /t REG_SZ /d 2000 /f',
+            'PrioridadAlta': 'echo Prioridad elevada',
+            'LimpiarInicio': 'reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /f',
+            'DesactivarTelemetria': 'reg add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f',
+            'ActivarMaximoRendimiento': 'powercfg -setactive e9a42b02-d5df-448d-aa00-03f14749eb61'
+        };
+        const cmd = cmdMap[name] || 'echo ' + name;
+        apiPost('/api/runcmd', { command: cmd });
+        addLog('Ejecutando', name);
+        showToast(`Ejecutando ${name}...`);
+    }
+
+    function runMaint() {
+        addLog('Mantenimiento', 'Completo iniciado');
+        showToast('Mantenimiento completo en curso...');
+        const cmds = [
+            'del /s /f /q %temp%\\*',
+            'del /s /f /q C:\\Windows\\Temp\\*',
+            'powershell -command "[System.GC]::Collect()"',
+            'sc stop DiagTrack'
+        ];
+        cmds.forEach(cmd => apiPost('/api/runcmd', { command: cmd }));
+    }
+
+    function allToggle(section, val) {
+        const map = {
+            aimbot: ['SilentAim','SilentAimMatch','SilentCoverMode','EnabledMemory','AimBotRage','AimBotRuby','AimBotRubyMatch','AimBotRageMatch','Replaced','DrawCircleFov','DrawCircleFovRage','ignoreteam','ignoreDown','ignoreBots'],
+            memory: ['NoRecoilX86','AimSniper','QuickSniper','miraxx2','miraxx4','SpeedHack','SpeedTimer','LevitateMe'],
+            exploits: ['FastFire','FastReload','InfinityAmmo','NoRecoilPro','DoubleGun','SpinBot','BackJump','MedikitHack','FakeDamage','BugCamara','NightMode','VisionHack','NickCustom','ClipLag','TeleportX','TeleportMark','PullEnemy','MagnetEnemy','UnderPlayer','RaiseEnemy','WallHackN32','WallHackP64','WallHackV7A','Noclip','FlyStatic','PullEnemyActive','FastFireActive','FastReloadActive','BugCamaraActive','MedikitHackActive','FakeDamageActive','NightModeActive','DoubleGunActive','VisionHackActive','IgnoreAltitude','WallHack','WallHackActive','NoclipAc','PlayerMove','PlayerMoveV2'],
+            windivert: ['TeleKillMode','GhostMode','TeleportLag','FreezeLag','FreezeAuto'],
+            visuals: ['ShowInvis','ShowTeam','ShowSkills','IgnoreBots','EspLine','EspBox','EspFill','EspSekelton','EspWeapon','EspHealth','EspPanelInfo','EspRank','EspDistance','EspName','EspKills','EspRacha','RGBMode','SkeletonHealth']
+        };
+        const features = map[section] || [];
+        features.forEach(f => {
+            const el = document.querySelector(`input[onchange="toggle('${f}',this.checked)"]`);
+            if (el) { el.checked = val; el.dispatchEvent(new Event('change')); }
+        });
+        showToast(`${section} ${val ? 'Todo ON' : 'Todo OFF'}`);
+    }
+
+    function allChamsOff() {
+        document.querySelectorAll('#chams .toggle input').forEach(i => { i.checked = false; i.dispatchEvent(new Event('change')); });
+        showToast('Todos los Chams desactivados');
+    }
+
+    function clearLog() {
+        document.getElementById('logPanel').innerHTML = '<div class="log-entry"><span class="log-time">[Sistema]</span> <span class="log-action">Log limpiado</span></div>';
+    }
+
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab).classList.add('active');
+        });
+    });
+</script>
+</body>
+</html>

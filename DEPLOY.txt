@@ -1,0 +1,59 @@
+# SPECTRAL X PRO - Web Panel
+
+## Como funciona
+
+```
+┌─────────────────┐      ┌──────────────────┐      ┌─────────────┐
+│  Celular/PC     │ ───> │  Vercel (HTML)    │ ───> │  Tu PC      │
+│  del cliente    │      │  tu-app.vercel.app│      │  server.py  │
+│                 │ <─── │                   │ <─── │  + DLL      │
+└─────────────────┘      └──────────────────┘      └─────────────┘
+     Login KeyAuth          Panel web               Escribe JSON
+```
+
+## Paso 1: Subir a GitHub
+
+```bash
+cd "5354354tetret"
+git init
+git add index.html vercel.json
+git commit -m "SPECTRAL X PRO Panel"
+git remote add origin https://github.com/TU_USUARIO/spectral-x-panel.git
+git push -u origin main
+```
+
+## Paso 2: Deploy en Vercel (gratis)
+
+1. Andá a https://vercel.com
+2. Create una cuenta gratis con tu GitHub
+3. Click "New Project"
+4. Seleccioná el repo `spectral-x-panel`
+5. Click "Deploy"
+6. Te da una URL tipo `spectral-x-panel.vercel.app`
+
+## Paso 3: Correr server.py en tu PC
+
+```bash
+# Instalar cloudflared (una vez)
+# Descargar de: https://github.com/cloudflare/cloudflared/releases/latest
+# Renombrar cloudflared-windows-amd64.exe a cloudflared.exe
+
+# Iniciar server + tunnel
+modo_online.bat
+```
+
+## Paso 4: Darle la URL a tus clientes
+
+1. Copiá la URL que da cloudflared (tipo `https://algo.trycloudflare.com`)
+2. Abrí `spectral-x-panel.vercel.app` en tu celular
+3. Pegá la URL del tunnel en "URL del servidor"
+4. Pone tu usuario/contrasena de KeyAuth
+5. Listo, controlás los toggles desde el celular
+
+## Archivos
+
+- `index.html` - Panel web (se sube a Vercel)
+- `vercel.json` - Config de Vercel
+- `server.py` - Servidor local (corre en tu PC)
+- `modo_online.bat` - Inicia server + tunnel
+- `iniciar_panel.bat` - Solo server local

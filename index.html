@@ -330,10 +330,8 @@
 <div class="login-overlay" id="loginOverlay">
     <div class="login-box">
         <h2>SPECTRAL X PRO</h2>
-        <p>Conecta con tu servidor y ingresa con KeyAuth</p>
-        <input type="text" id="serverUrl" placeholder="URL del servidor (https://algo.trycloudflare.com)" maxlength="200"
-               onkeydown="if(event.key==='Enter')document.getElementById('loginUser').focus()">
-        <input type="text" id="loginUser" placeholder="Usuario KeyAuth" maxlength="30"
+        <p>Ingresa con tu cuenta de KeyAuth</p>
+        <input type="text" id="loginUser" placeholder="Usuario" maxlength="30"
                onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
         <input type="password" id="loginPass" placeholder="Contrasena" maxlength="30"
                onkeydown="if(event.key==='Enter')doLogin()">
@@ -1159,31 +1157,24 @@
 <div class="toast" id="toast"></div>
 
     <script>
-    let API = localStorage.getItem('spectral_server') || '';
+    let API = localStorage.getItem('spectral_server') || 'https://misc-bridal-bryant-extraction.trycloudflare.com';
     const state = {};
     let authToken = localStorage.getItem('spectral_token') || '';
     let currentUser = localStorage.getItem('spectral_user') || '';
 
     function checkAuth() {
-        if (authToken && currentUser && API) {
+        if (authToken && currentUser) {
             document.getElementById('loginOverlay').classList.add('hidden');
             document.getElementById('headerUser').textContent = currentUser;
-        }
-        const savedServer = localStorage.getItem('spectral_server');
-        if (savedServer) {
-            document.getElementById('serverUrl').value = savedServer;
         }
     }
     checkAuth();
 
     async function doLogin() {
-        const server = document.getElementById('serverUrl').value.trim().replace(/\/+$/, '');
         const user = document.getElementById('loginUser').value.trim();
         const pass = document.getElementById('loginPass').value.trim();
         const errEl = document.getElementById('loginError');
-        if (!server) { errEl.textContent = 'Ingresa la URL del servidor'; return; }
         if (!user || !pass) { errEl.textContent = 'Ingresa usuario y contrasena'; return; }
-        API = server;
         errEl.textContent = 'Verificando con KeyAuth...';
         try {
             const res = await fetch(API + '/api/auth', {
@@ -1197,7 +1188,6 @@
                 currentUser = data.user.username;
                 localStorage.setItem('spectral_token', authToken);
                 localStorage.setItem('spectral_user', currentUser);
-                localStorage.setItem('spectral_server', API);
                 document.getElementById('loginOverlay').classList.add('hidden');
                 errEl.textContent = '';
                 const info = data.user;
@@ -1218,10 +1208,8 @@
     function logout() {
         authToken = '';
         currentUser = '';
-        API = '';
         localStorage.removeItem('spectral_token');
         localStorage.removeItem('spectral_user');
-        localStorage.removeItem('spectral_server');
         document.getElementById('loginOverlay').classList.remove('hidden');
         addLog('Logout', 'Sesion cerrada');
     }

@@ -295,8 +295,9 @@
             background: #15151f;
             border: 1px solid #333;
             border-radius: 16px;
-            padding: 40px;
-            width: 380px;
+            padding: 30px 20px;
+            width: 90%;
+            max-width: 400px;
             text-align: center;
         }
         .login-box h2 {
@@ -310,12 +311,14 @@
         .login-box input {
             width: 100%; padding: 12px 16px;
             background: #0d0d12; border: 1px solid #333;
-            border-radius: 8px; color: #fff; font-size: 0.8rem;
+            border-radius: 8px; color: #fff; font-size: 0.75rem;
             font-family: 'Courier New', monospace;
             text-align: left; letter-spacing: 0;
             outline: none; margin-bottom: 16px;
             overflow-x: auto; white-space: nowrap;
+            -webkit-appearance: none;
         }
+        .login-box input:focus { border-color: #00d2ff; }
         .login-box input:focus { border-color: #00d2ff; }
         .login-box .btn { width: 100%; padding: 12px; font-size: 0.9rem; }
         .login-error { color: #ff4444; font-size: 0.8rem; margin-top: 10px; min-height: 20px; }
